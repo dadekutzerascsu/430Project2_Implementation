@@ -13,6 +13,7 @@ tests/                Java test drivers
 bin/                  Generated .class files (ignored by Git)
 requirements/         Final assignment document and project checklist
 PreviousAssignments/  Earlier assignments and original Stage 1 source
+WarehouseFSM/          Assignment-ready application source
 LibraryFinal/         Instructor's reference implementation
 .tools/               Portable JDK (local, ignored by Git)
 .vscode/              VS Code configuration
@@ -27,6 +28,18 @@ javac -d bin src\*.java
 java -cp bin UserInterface
 ```
 
+The assignment-ready source files are also under `WarehouseFSM/`. To compile
+and run from that folder as requested for the group repository:
+
+```sh
+cd WarehouseFSM
+javac *.java
+java UserInterface
+```
+
+At startup, answer `n` to start with a clean warehouse. The UI then begins in
+`OpeningState`; use the role menus to perform the assignment sequence.
+
 Compile and run the test drivers separately:
 
 ```powershell
@@ -40,10 +53,11 @@ java -cp bin OrderFulfillmentTest
 java -cp bin ShipmentTest
 java -cp bin SaveLoadTest
 java -cp bin DemoScriptTest
+java -cp bin FsmWorkflowTest
 ```
 
-For a demonstration using the assignment's exact commands, run them inside
-`src/`. This puts generated class files beside the source; they are ignored by Git:
+For the assignment demonstration, compile and run from `WarehouseFSM/`, as
+shown above. For development, the `src/` copy can also be compiled directly:
 
 ```powershell
 cd src
@@ -75,37 +89,29 @@ if VS Code still shows old source locations.
 
 ## Implemented features
 
-The current program supports creating clients/products, adding, replacing or
-removing wishlist entries, reviewing and submitting client orders, recording
-payments, receiving shipments, saving/loading, and displaying clients,
-products, wishlists, waitlists, invoices, outstanding balances, individual
-client details and transaction histories. Wishlist review lets the clerk
-change an existing item's quantity or add another catalog product. Submitting
-an order fulfills available stock, queues shortages FIFO per product, creates
-a dated invoice for supplied items at their captured unit prices, charges the
-invoice total to the client's account automatically, and clears the submitted
-wishlist. Receiving a shipment fills the product's waitlist FIFO first: each
-fill generates its own invoice and automatic charge, and partially filled
-requests keep their place at the head of the line. Leftover units are then
-added to the product's stock.
+The Project 2 interface is a text-only FSM in `src/`: `Context` owns the
+transition matrix and role history; `OpeningState`, `ClientMenuState`,
+`ClerkMenuState` and `ManagerMenuState` implement the four class-diagram states.
+The client ID is kept in the context while a client menu is active. Becoming a
+client/clerk pushes the prior role, and logout returns to it. The same source
+files are also included in `WarehouseFSM/` for the assignment's GitHub folder.
+
+The role menus support client details, product lists, transactions, wishlists,
+orders and invoices; clerk client/payment operations; and manager product,
+waitlist and shipment operations. Orders fulfill available stock, queue
+shortages FIFO per product, create a dated invoice for supplied items at their
+captured unit prices, charge the account automatically, and clear the
+submitted wishlist. Receiving a shipment fills the product's waitlist FIFO
+first: each fill generates its own invoice and automatic charge, partially
+filled requests remain queued, and leftover units are added to stock.
 Use numeric IDs (1, 2, 3); C1/P1 in the assignment are example names.
 StoreSystem remains the single coordinator, keeping the Stage 1 structure.
 Small integration changes validate model data, protect collection membership,
 and handle invalid console input and end-of-input cleanly.
 
-Menu options beyond the Stage 1 basics:
-
-- **8:** Receive a client payment.
-- **9:** Display a client's details and balance.
-- **10:** Display a client's transactions.
-- **11:** Review and submit a client's order; change quantities or add products.
-- **12:** Receive a product shipment (waitlist first, leftovers to stock).
-- **13:** Display a product's waitlist and total waitlisted quantity.
-- **14:** Display a client's invoices.
-- **15:** Display clients with outstanding balances.
-- **16:** Save the warehouse data.
-- **17:** Remove a product from a wishlist (the delete half of the
-  add/delete wishlist business process).
+Client menus include wishlist removal and invoice history. Clerk menus include
+payment recording, outstanding-balance reports and saving. Manager menus
+include shipment receipt, waitlist display and saving.
 
 Payments follow PreviousAssignments/ReceivePaymentFromAClient.pdf:
 find the client, show the current balance, request a positive amount, credit
@@ -148,40 +154,37 @@ directory). `DemoScriptTest` runs the assignment's full test sequence and
 checks the expected final results: stock 92/7/25/33/39; C1 $55 credit,
 C2 $51 credit, C3 $48 owed, C4/C5 $0; invoices C1 $40+$5, C2 $49, C3 $45+$3.
 
-Save/load: at startup the program asks whether to load previously saved data,
-and menu option 16 saves the warehouse, including the next client/product ID
-counters, to the file WarehouseData in the working directory (ignored by Git).
+Save/load: at startup the program asks whether to load previously saved data.
+Clerk and manager menus can save the warehouse, including the next
+client/product ID counters, to `WarehouseData` in the working directory
+(ignored by Git).
 
-The assignment's whole test sequence can be replayed through the real menu:
+The assignment's client/product/wishlist/order workflow is exercised through
+the actual FSM menus and checked end-to-end:
 
-```powershell
-Get-Content tests\demo-input.txt | java -cp bin UserInterface
+```sh
+javac -d bin src/*.java
+javac -cp bin -d bin tests/*.java
+java -cp bin FsmWorkflowTest
 ```
+
+`DemoScriptTest` separately checks the extended order/payment/shipment scenario.
 
 ## Recording the required test session
 
-The assignment requires a recorded script session showing compilation and
-the completed test run (this was a missed deliverable before - do not skip
-it). On Windows, use a PowerShell transcript as the equivalent of the Unix
-`script warehouseTest` command:
+The assignment requires a Zoom cloud recording demonstrating the menu workflow.
+Run the program interactively while screen sharing, and show compilation and
+the full sequence. This recording and the D2L completion report still need to
+be completed by the group.
 
-```powershell
-Start-Transcript warehouseTest.txt
-cd src
-javac *.java
-java UserInterface      # run the whole sequence from tests\demo-input.txt
-cd ..
-Stop-Transcript
+```sh
+javac -d bin src/*.java
+java -cp bin UserInterface
 ```
 
-Enter the demo sequence manually (or pipe `tests\demo-input.txt` as shown
-above) and show the queries between operations. The transcript's timestamps
-also document when coding/testing happened for the report's timeline section.
-Expected results for the report table: final stock 92/7/25/33/39; balances
-C1 $55 credit, C2 $51 credit, C3 $48 owed, C4/C5 $0; invoices C1 $40 + $5,
-C2 $49, C3 $45 + $3.
+See [Project2requirements/Project2-completion-checklist.md](Project2requirements/Project2-completion-checklist.md)
+for the Project 2 implementation and submission checklist, and
+requirements/project-checklist.md for the separate 150-point project scope.
 
-See requirements/project-checklist.md for the full 150-point scope.
-
-Compile only `src/` and `tests/`, not all folders recursively: the references
-contain duplicate class names, including UserInterface.
+Compile only `src/` and `tests/`, not all folders recursively: the reference
+folders contain duplicate class names, including `UserInterface`.

@@ -1,0 +1,29 @@
+import java.util.*;
+public class Hold {
+	private Book book;
+	private Member member;
+	private Calendar date;
+	public Hold(Member member, Book book, int duration) {
+		this.book = book;
+		this.member = member;
+		date = new GregorianCalendar();
+		date.setTimeInMillis(System.currentTimeMillis());
+		date.add(Calendar.DATE, duration);	
+	}
+	public Member getMember() {
+		return member;
+	}
+	public Book getBook() {
+		return book;
+	}
+    public Calendar getDate() {
+	return date;
+    }
+
+    public boolean isValid(){
+	System.out.println("checking validity" + System.currentTimeMillis() +
+			   "  " + date.getTimeInMillis());
+	return (System.currentTimeMillis() < date.getTimeInMillis());
+    }
+}
+

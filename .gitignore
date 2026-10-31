@@ -1,0 +1,10 @@
+# Compiled Java files and local tooling
+*.class
+/bin/
+/.tools/
+
+# Local VS Code settings contain this computer's JDK path
+/.vscode/settings.json
+
+# Warehouse save file (created in the working directory, e.g. root or src)
+WarehouseData
